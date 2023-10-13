@@ -202,7 +202,7 @@ def _contract_sep_diagonal(
     """
     ac = torch.view_as_complex(a)
     bc = torch.view_as_complex(b)
-    resc = torch.einsum("bixy,ixy->boxy", ac, bc)
+    resc = torch.einsum("bixy,ixy->bixy", ac, bc)
     res = torch.view_as_real(resc)
     return res
 
@@ -216,6 +216,6 @@ def _contract_sep_dhconv(
     """
     ac = torch.view_as_complex(a)
     bc = torch.view_as_complex(b)
-    resc = torch.einsum("bixy,ix->boxy", ac, bc)
+    resc = torch.einsum("bixy,ix->bixy", ac, bc)
     res = torch.view_as_real(resc)
     return res

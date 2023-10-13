@@ -33,7 +33,7 @@ einsum_symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def _contract_dense(
-    x, weight, separable=False, operator_type="diagonal"
+    x, weight, scale,separable=False, operator_type="diagonal"
 ):  # pragma: no cover
     order = tl.ndim(x)
     # batch-size, in_channels, x, y...
@@ -191,7 +191,7 @@ def _contract_tt(
 
 # jitted PyTorch contractions:
 def _contract_dense_pytorch(
-    x, weight, separable=False, operator_type="diagonal"
+    x, weight, scale, separable=False, operator_type="diagonal"
 ):  # pragma: no cover
 
     # to cheat the fused optimizers convert to real here
@@ -199,9 +199,9 @@ def _contract_dense_pytorch(
 
     if separable:
         if operator_type == "diagonal":
-            x = _contract_sep_diagonal(x, weight)
+            x = _contract_sep_diagonal(x, weight, scale)
         elif operator_type == "dhconv":
-            x = _contract_sep_dhconv(x, weight)
+            x = _contract_sep_dhconv(x, weight, scale)
         else:
             raise ValueError(f"Unkonw operator type {operator_type}")
     else:

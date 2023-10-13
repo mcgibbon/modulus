@@ -100,10 +100,8 @@ class SpectralConvS2(nn.Module):
         assert self.inverse_transform.lmax == self.modes_lat
         assert self.inverse_transform.mmax == self.modes_lon
 
-        weight_shape = [in_channels]
+        weight_shape = [in_channels, out_channels]
 
-        if not self.separable:
-            weight_shape += [out_channels]
 
         if isinstance(self.inverse_transform, thd.DistributedInverseRealSHT):
             self.modes_lat_local = self.inverse_transform.lmax_local
@@ -124,13 +122,22 @@ class SpectralConvS2(nn.Module):
         # else:
         #     raise ValueError(f"Unsupported operator type f{self.operator_type}")
 
-        # unpadded weights
-        if self.operator_type == "diagonal":
-            weight_shape += [self.modes_lat_local, self.modes_lon_local]
-        elif self.operator_type == "dhconv":
-            weight_shape += [self.modes_lat_local]
+        if not self.separable:
+            if self.operator_type == "diagonal":
+                weight_shape += [self.modes_lat_local, self.modes_lon_local]
+            elif self.operator_type == "dhconv":
+                weight_shape += [self.modes_lat_local]
+            else:
+                raise ValueError(f"Unsupported operator type f{self.operator_type}")
+            scale_shape = None
         else:
-            raise ValueError(f"Unsupported operator type f{self.operator_type}")
+            # unpadded weights
+            if self.operator_type == "diagonal":
+                scale_shape = [out_channels, self.modes_lat_local, self.modes_lon_local]
+            elif self.operator_type == "dhconv":
+                scale_shape = [out_channels, self.modes_lat_local]
+            else:
+                raise ValueError(f"Unsupported operator type f{self.operator_type}")
 
         if use_tensorly:
             # form weight tensors
@@ -146,10 +153,18 @@ class SpectralConvS2(nn.Module):
         else:
             assert factorization == "ComplexDense"
             self.weight = nn.Parameter(scale * torch.randn(*weight_shape, 2))
+            if scale_shape is not None:
+                self.scale = nn.Parameter(scale * torch.randn(*scale_shape, 2))
+            else:
+                self.scale = None
             if self.operator_type == "dhconv":
                 self.weight.is_shared_mp = ["matmul", "w"]
+                if self.scale is not None:
+                    self.scale.is_shared_mp = ["matmul", "w"]
             else:
                 self.weight.is_shared_mp = ["matmul"]
+                if self.scale is not None:
+                    self.scale.is_shared_mp = ["matmul"]
 
         # get the contraction handle
         self._contract = get_contract_fun(
@@ -178,6 +193,7 @@ class SpectralConvS2(nn.Module):
         xp[..., : self.modes_lat_local, : self.modes_lon_local] = self._contract(
             x[..., : self.modes_lat_local, : self.modes_lon_local],
             self.weight,
+            self.scale,
             separable=self.separable,
             operator_type=self.operator_type,
         )

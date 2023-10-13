@@ -195,27 +195,29 @@ def _contract_dhconv(
 
 @torch.jit.script
 def _contract_sep_diagonal(
-    a: torch.Tensor, b: torch.Tensor
+    a: torch.Tensor, b: torch.Tensor, c: torch.Tensor
 ) -> torch.Tensor:  # pragma: no cover
     """
     Performs a complex convolution operation between two tensors 'a' and 'b'
     """
     ac = torch.view_as_complex(a)
     bc = torch.view_as_complex(b)
-    resc = torch.einsum("bixy,ixy->bixy", ac, bc)
+    cc = torch.view_as_complex(c)
+    resc = torch.einsum("bixy,io,ox->boxy", ac, bc, cc)
     res = torch.view_as_real(resc)
     return res
 
 
 @torch.jit.script
 def _contract_sep_dhconv(
-    a: torch.Tensor, b: torch.Tensor
+    a: torch.Tensor, b: torch.Tensor, c: torch.Tensor
 ) -> torch.Tensor:  # pragma: no cover
     """
     Performs a complex convolution operation between two tensors 'a' and 'b'
     """
     ac = torch.view_as_complex(a)
     bc = torch.view_as_complex(b)
-    resc = torch.einsum("bixy,ix->bixy", ac, bc)
+    cc = torch.view_as_complex(c)
+    resc = torch.einsum("bixy,io,ox->boxy", ac, bc, cc)
     res = torch.view_as_real(resc)
     return res

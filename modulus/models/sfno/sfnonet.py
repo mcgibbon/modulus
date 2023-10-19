@@ -251,6 +251,7 @@ class FourierNeuralOperatorBlock(nn.Module):
             self.outer_skip_conv = nn.Conv2d(2 * embed_dim, embed_dim, 1, bias=False)
 
     def forward(self, x):
+        outer_residual = x
 
         x_norm = torch.zeros_like(x)
         x_norm[..., : self.input_shape_loc[0], : self.input_shape_loc[1]] = self.norm0(
@@ -281,10 +282,10 @@ class FourierNeuralOperatorBlock(nn.Module):
 
         if hasattr(self, "outer_skip"):
             if self.concat_skip:
-                x = torch.cat((x, self.outer_skip(residual)), dim=1)
+                x = torch.cat((x, self.outer_skip(outer_residual)), dim=1)
                 x = self.outer_skip_conv(x)
             else:
-                x = x + self.outer_skip(residual)
+                x = x + self.outer_skip(outer_residual)
 
         return x
 

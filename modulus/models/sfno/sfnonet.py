@@ -786,6 +786,19 @@ class SphericalFourierNeuralOperatorNet(Module):
 
         x = self._forward_features(x)
 
+        if hasattr(self, "pos_embed"):
+
+            # old way of treating unequally shaped weights
+            if self.img_shape_loc != self.img_shape_eff:
+                xp = torch.zeros_like(x)
+                xp[..., : self.img_shape_loc[0], : self.img_shape_loc[1]] = (
+                    x[..., : self.img_shape_loc[0], : self.img_shape_loc[1]]
+                    - self.pos_embed
+                )
+                x = xp
+            else:
+                x = x - self.pos_embed
+
         if self.big_skip:
             x = torch.cat((x, residual), dim=1)
 

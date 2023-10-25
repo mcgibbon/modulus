@@ -527,10 +527,10 @@ class SphericalFourierNeuralOperatorNet(Module):
 
             # set up
             self.trans_down = sht_handle(
-                *self.img_shape, lmax=modes_lat, mmax=modes_lon, grid="equiangular"
+                *self.img_shape, lmax=modes_lat, mmax=modes_lon, grid="legendre-gauss"
             ).float()
             self.itrans_up = isht_handle(
-                *self.img_shape, lmax=modes_lat, mmax=modes_lon, grid="equiangular"
+                *self.img_shape, lmax=modes_lat, mmax=modes_lon, grid="legendre-gauss"
             ).float()
             self.trans = sht_handle(
                 self.h, self.w, lmax=modes_lat, mmax=modes_lon, grid="legendre-gauss"

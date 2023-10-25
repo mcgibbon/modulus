@@ -757,6 +757,13 @@ class SphericalFourierNeuralOperatorNet(Module):
 
     def forward(self, x):
 
+        # round-trip the inputs
+        xtype = x.dtype
+        x = self.trans_down(x)
+        x = x.contiguous()
+        x = self.itrans_up(x)
+        x = x.to(dtype=xtype)
+
         # save big skip
         if self.big_skip:
             residual = x
